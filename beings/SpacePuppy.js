@@ -1,18 +1,24 @@
-function SpacePuppy( toucher , file){
+
+
+function SpacePuppy( id , center , touchers , file){
+
+  this.id = id;
+  this.center = center;
 
   // This is the vec3 that we use to calculate being touched
-  this.toucher = toucher;
+  this.touchers = touchers;
   
   this.stream = new Stream( file , audioController );
 
-  this.springLength = .2
+  this.springLength = .2;
+
 
   // STATE
   this.hovered = false;
   this.touched = false;
   this.playing = false;
  
-  this.outerRadius = .04;
+  this.outerRadius = .06;
   this.innerRadius = .03;
 
   this.touchVec = new THREE.Vector3();
@@ -56,16 +62,6 @@ function SpacePuppy( toucher , file){
   this.body = new THREE.Mesh( geo , mat );
 
 
-  /*var geo = new THREE.IcosahedronGeometry( this.outerRadius , 3 );
-  var mat = new THREE.ShaderMaterial({
-    uniforms:this.uniforms,
-    vertexShader: shaders.vs.spacePuppy,
-    fragmentShader: shaders.fs.spacePuppy,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });*/
-
   var geo = new THREE.IcosahedronGeometry( 1 , 2 );
   var mat = new THREE.MeshBasicMaterial({ wireframe: true , opacity: .1 , transparent: true });
 
@@ -78,7 +74,13 @@ function SpacePuppy( toucher , file){
 
   this.body.add( this.shell );
 
-    // PHYSICS
+  
+  /*
+  
+      PHYSICS
+
+  */
+
   this.position = this.body.position;
   this.velocity = new THREE.Vector3();
   this.dampening = .97;
@@ -89,18 +91,54 @@ function SpacePuppy( toucher , file){
 
 
 
+  /*
+  
+     AUDIO
+
+  */
+
+  var ctx = audioController.ctx;
+  this.gain = ctx.createGain();
+  this.gain.connect( audioController.gain );
+
+  this.oscillator = ctx.createOscillator();
+  //this.oscillator.type = 'square';
+  this.oscillator.frequency.value = id * 40; // value in hertz
+  this.oscillator.start();
+  this.oscillator.connect( this.gain );
+/*
+  this.peak = ctx.createOscillator();
+  this.peak.start();
+  this.peak.connect( this.gain );
+
+  this.peak.frequency.value = id * 120;*/
+  
+
 
 }
 
 SpacePuppy.prototype.update = function(){
 
-  this.touchVec.copy( this.toucher );
+  var l = 10000
+  for( var i = 0; i < this.touchers.length; i++ ){
+
+    this.tv1.copy( this.touchers[i] );
+    this.tv1.sub( this.body.position );
+    if( this.tv1.length() < l ){
+      l = this.tv1.length()
+      this.touchVec.copy( this.touchers[i] );
+    }
+
+  }
+  //this.touchVec.copy( this.toucher );
   this.touchVec.sub( this.body.position );
 
   //console.log( this.body.position );
 
   this.oDist = this.dist;
   this.dist = this.touchVec.length();
+
+  this.gain.gain.value = Math.min( .4 , .001 / this.dist);
  
 
   if( this.dist <=  this.outerRadius && this.oDist > this.outerRadius ){
@@ -161,7 +199,7 @@ SpacePuppy.prototype.hovering = function( amount ){
 
   this.shell.material.color.setHSL( amount * 30  , 1 , .8 );
 
-  console.log('hvo');
+  this.oscillator.frequency.value = this.id * 40 + 40 * amount
 
 }
 
@@ -200,6 +238,7 @@ SpacePuppy.prototype.idling = function(){
   }
 
   this.tv1.copy( this.position );
+  this.tv1.sub( this.center );
   this.tv1.normalize();
   this.tv1.multiplyScalar( .0001 );
 
@@ -231,6 +270,7 @@ SpacePuppy.prototype.touchDown = function(){
   this.touched = true; 
   console.log( 'touchDown' );
 
+  //this.peak.start();
   if( this.playing == false ){
     this.playing = true;
     //this.stream.play();
@@ -243,6 +283,8 @@ SpacePuppy.prototype.touchDown = function(){
 
 SpacePuppy.prototype.touchUp = function(){
 
+  //this.peak.stop();
+
   console.log( 'touchUp' );
   this.touchStartTime = G.time.value;
   this.uniforms.radius.value = .001//2 * Math.abs( Math.sin( time )  + Math.sin( time * 1.7015 ));
@@ -251,3 +293,5 @@ SpacePuppy.prototype.touchUp = function(){
 
 
 }
+
+
