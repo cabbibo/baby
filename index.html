@@ -68,6 +68,8 @@
 
       var BEINGS = {};
 
+      var spacePuppies = [];
+
       var controller = new Leap.Controller();
       if( VR == true ){
         controller.setOptimizeHMD(true);
@@ -150,20 +152,30 @@
         controller.connect();
 
 
-        spacePuppy = new SpacePuppy(G.fingers.value[8] , 'audio/drop.mp3');
-        spacePuppy2 = new SpacePuppy(G.fingers.value[8] , 'audio/drop.mp3');
+        for( var  i = 0; i < 50; i++ ){
+          var spacePuppy = new SpacePuppy(G.fingers.value[9] , 'audio/drop.mp3');
+          spacePuppy.position.x = ( Math.random() - .5 )
+          spacePuppy.position.y = ( Math.random() - .5 )
+          spacePuppies.push( spacePuppy );
+          scene.add( spacePuppy.body );
+        }
 
-        spacePuppy2.body.position.x = .1;
-        scene.add( spacePuppy.body );
-        scene.add( spacePuppy2.body );
+        for(var  i=0; i <spacePuppies.length; i++ ){
+  
+          spacePuppies[i].assignBrethren( spacePuppies );
+
+        }
        
       }
 
       function animate(){
 
+        for(var i=0; i < spacePuppies.length; i++ ){
 
-        spacePuppy.update();
-        spacePuppy2.update();
+          spacePuppies[i].update();
+
+        }
+
           
         if( VR == true ){
           controls.update();

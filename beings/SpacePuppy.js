@@ -5,6 +5,8 @@ function SpacePuppy( toucher , file){
   
   this.stream = new Stream( file , audioController );
 
+  this.springLength = .2
+
   // STATE
   this.hovered = false;
   this.touched = false;
@@ -53,6 +55,7 @@ function SpacePuppy( toucher , file){
   
   this.body = new THREE.Mesh( geo , mat );
 
+
   /*var geo = new THREE.IcosahedronGeometry( this.outerRadius , 3 );
   var mat = new THREE.ShaderMaterial({
     uniforms:this.uniforms,
@@ -75,6 +78,14 @@ function SpacePuppy( toucher , file){
 
   this.body.add( this.shell );
 
+    // PHYSICS
+  this.position = this.body.position;
+  this.velocity = new THREE.Vector3();
+  this.dampening = .97;
+
+  this.brethren = [];
+
+  this.tv1 = new THREE.Vector3();
 
 
 
@@ -116,13 +127,27 @@ SpacePuppy.prototype.update = function(){
     var amount = ( this.dist - this.innerRadius) / ( this.outerRadius - this.innerRadius );
     this.hovering( amount );
 
-
   }
+
 
   //TOUCHING
   if( this.touched === true ){
     this.touching();
   }
+
+
+  if( this.hovered === false ){
+    this.idling();
+  }
+
+  this.position.add( this.velocity );
+  this.velocity.multiplyScalar( this.dampening );
+
+}
+
+SpacePuppy.prototype.assignBrethren = function(array){
+
+  this.brethren = array;
 
 }
 
@@ -148,8 +173,39 @@ SpacePuppy.prototype.touching = function(){
   this.uniforms.scale.value = 2 * Math.abs( Math.sin( time )  + Math.sin( time * 1.7015 ));
   this.uniforms.radius.value = .02 * Math.abs( Math.sin( time )  + Math.sin( time * 1.7015 ));
 
+
+  this.tv1.copy( this.touchVec );
+  this.tv1.multiplyScalar( .4 );
+
+  this.velocity.copy( this.tv1 );
+
 }
 
+SpacePuppy.prototype.idling = function(){
+
+
+  for( var i  = 0; i < this.brethren.length; i++ ){
+
+    if( this.brethren[i] !== this ){
+
+      this.tv1.copy( this.brethren[i].position );
+      this.tv1.sub( this.position );
+      var l = this.tv1.length() - this.springLength;
+      this.tv1.normalize();
+      this.tv1.multiplyScalar( l * l * l  * .01);
+      this.velocity.add( this.tv1 );
+
+    }
+
+  }
+
+  this.tv1.copy( this.position );
+  this.tv1.normalize();
+  this.tv1.multiplyScalar( .0001 );
+
+  this.velocity.sub( this.tv1 );
+
+}
 
 
 SpacePuppy.prototype.hoverOver = function(){
@@ -177,10 +233,10 @@ SpacePuppy.prototype.touchDown = function(){
 
   if( this.playing == false ){
     this.playing = true;
-    this.stream.play();
+    //this.stream.play();
   }else{
     this.playing = false;
-    this.stream.stop();
+    //this.stream.stop();
   }
 
 }
