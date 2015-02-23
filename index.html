@@ -10,6 +10,8 @@
     overflow: hidden;
   }
   iframe {
+    margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
   }
@@ -26,6 +28,9 @@
       case 70: // f
         enterVr();
         break;
+      case 90:
+        positionDevice.zeroSensor();
+        break;
     }
   }
 
@@ -37,20 +42,29 @@
     } else if (container.webkitRequestFullscreen) {
       container.webkitRequestFullscreen({ vrDisplay: hmdDevice });
     }
+
+    container.focus();
   }
   
   window.addEventListener("keydown", onkey, true);
 
   var container = document.getElementById('container');
 
-  var hmdDevice;
+  var hmdDevice, positionDevice;
 
-  navigator.getVRDevices().then(function (devices) {
+  navigator.getVRDevices().then(function(devices) {
     for (var i = 0; i < devices.length; ++i) {
-      if (devices[i] instanceof HMDVRDevice && !self.hmdDevice) {
+      if (devices[i] instanceof HMDVRDevice) {
         hmdDevice = devices[i];
       }
+      if (devices[i] instanceof PositionSensorVRDevice) {
+        positionDevice = devices[i];
+      }
     }
+    console.log(hmdDevice, positionDevice);
   });
+
+
+
 </script>
 </html>
