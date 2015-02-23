@@ -1,209 +1,56 @@
 <html>
+<head>
+  <title></title>
 
-  <head>
-    <style>
-      body{ margin: 0px; }
-    </style>
-  </head>
+</head>
+<style type="text/css">
+  html, body {
+    border:0;
+    padding:0;
+    overflow: hidden;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+  }
+</style>
+<body>
+  <iframe id="container" src="pages/fogCube/index.html"></iframe>
+</body>
+<script>
 
-  <body>
+  function onkey(event) {
+    //console.log(event.keyCode)
 
-    <script src = "lib/leap.min.js"               ></script>
-    <script src = "lib/three.min.js"              ></script>
-    <script src = "lib/underscore.js"             ></script>
-    <script src = "lib/jquery.min.js"             ></script>
-    <script src = "lib/TrackballControls.js"      ></script>
-    <script src = "lib/OrbitControls.js"          ></script>
-    <script src = "lib/SubdivisionModifier.js"    ></script>
-    <script src = "lib/PhysicsRenderer.js"        ></script>
-    
-    <script src = "lib/VREffect.js"               ></script>
-    <script src = "lib/VRControls.js"             ></script>
-    
-    <script src = "lib/ShaderLoader.js"           ></script>
+    switch (event.keyCode) {
+      case 70: // f
+        enterVr();
+        break;
+    }
+  }
 
-    <script src = "lib/UserAudio.js"              ></script>
-    <script src = "lib/Stream.js"                 ></script>
-    <script src = "lib/AudioController.js"        ></script>
-    <script src = "lib/AudioTexture.js"           ></script>
-    <script src = "lib/PositionalAudio.js"        ></script>
-    <script src = "lib/Loop.js"                   ></script>
-    <script src = "lib/Looper.js"                 ></script>
-    
-    <script src = "Fingers.js"                    ></script>
-    <script src = "utils.js"                      ></script>
-
-    <script src = "beings/SpacePuppy.js"          ></script>
-
-    <script>
-
-      
-      var VR = true;
-      var AUDIO = true;
-
-      var tv1 = new THREE.Vector3();
-      var tv2 = new THREE.Vector3();
-
-      var matcapTurq  = THREE.ImageUtils.loadTexture( 'img/matcap/turq.jpg'  );
-      var matcapBlood = THREE.ImageUtils.loadTexture( 'img/matcap/blood.jpg' );
-      var matcapDark  = THREE.ImageUtils.loadTexture( 'img/matcap/dark.jpg'  );
-      var matcapMetal = THREE.ImageUtils.loadTexture( 'img/matcap/metal.jpg' );
-
-      var G = {
-
-        dT:{type:"f" , value:0},
-        time:{type:"f" , value:0},
-        t_matcap:{ type:"t" , value: matcapDark },
-        t_blood:{ type:"t" , value: matcapDark },
-        fogColor:{ type:"v3" , value: new THREE.Vector3() },
-        t_audio:{type:"t",value:null},
-        fingers:{ type:"v3", value:null }
-
-      }
-
-      var loaded = 0;
-      var neededToLoad = 1;
-
-      var camera, renderer, scene , controls;
-
-      var BEINGS = {};
-
-      var spacePuppies = [];
-
-      var controller = new Leap.Controller();
-      if( VR == true ){
-        controller.setOptimizeHMD(true);
-      }
-
-      var shaders = new ShaderLoader( 'shaders' , 'shaderChunks'   );
-
-
-      if( AUDIO == true ){
-
-        audioController = new AudioController();
-    
-
-        G.t_audio.value = audioController.texture;
-
-
-        var looper = new Looper( audioController , G.time , {
-
-          beatsPerMinute: 96,
-          beatsPerMeasure: 4,
-          measuresPerLoop: 8
-
-        });
-
-      }
-
-      shaders.shaderSetLoaded = function(){
-        onLoad();
-      }
-
-
-      shaders.load( 'vs-spacePuppy' , 'spacePuppy' , 'vertex'   );
-      shaders.load( 'fs-spacePuppy' , 'spacePuppy' , 'fragment' );
-
-    
-      function init(){
-
-        var w = window.innerWidth;
-        var h = window.innerHeight;
-
-        clock = new THREE.Clock();
-
-        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, .01, 100 );
-        //camera.position.z = .3;
-        camera.lookAt( new THREE.Vector3() );
-
-
-        renderer = new THREE.WebGLRenderer( { antialias: true } );
-
-        renderer.autoClear = false;
-
-        document.body.appendChild( renderer.domElement );
-        window.addEventListener( 'resize', onWindowResize , false );
-		    document.body.addEventListener( 'dblclick', onDoubleClick , false );
-
-        //document.body.addEventListener("keydown", onKeyDown, true);
-
-
-        if( VR == true ){
-
-          controls = new THREE.VRControls( camera );
-
-          effect = new THREE.VREffect( renderer );
-          effect.setSize( window.innerWidth, window.innerHeight );
-
-        }else{
-
-          renderer.setSize( window.innerWidth, window.innerHeight );
-
-        }
-
-
-
-        scene = new THREE.Scene();
-
-        fingers = new Fingers( camera , controller );
-           
-        fingers.add( scene ); 
-        G.fingers.value = fingers.positions; 
-        controller.connect();
-
-
-        spacePuppiesCenter = new THREE.Vector3(0 , .4 , -.2);
-
-        for( var  i = 0; i < 20; i++ ){
-          var spacePuppy = new SpacePuppy( i ,  spacePuppiesCenter , G.fingers.value , 'audio/drop.mp3');
-          spacePuppy.position.x = ( Math.random() - .5 )
-          spacePuppy.position.y = ( Math.random() - .5 )
-          spacePuppy.position.z = ( Math.random() - .5 )
-          spacePuppies.push( spacePuppy );
-          scene.add( spacePuppy.body );
-        }
-
-        for(var  i=0; i <spacePuppies.length; i++ ){
+  function enterVr() {
+    if (container.requestFullscreen) {
+      container.requestFullscreen({ vrDisplay: hmdDevice });
+    } else if (container.mozRequestFullScreen) {
+      container.mozRequestFullScreen({ vrDisplay: hmdDevice });
+    } else if (container.webkitRequestFullscreen) {
+      container.webkitRequestFullscreen({ vrDisplay: hmdDevice });
+    }
+  }
   
-          spacePuppies[i].assignBrethren( spacePuppies );
+  window.addEventListener("keydown", onkey, true);
 
-        }
-       
+  var container = document.getElementById('container');
+
+  var hmdDevice;
+
+  navigator.getVRDevices().then(function (devices) {
+    for (var i = 0; i < devices.length; ++i) {
+      if (devices[i] instanceof HMDVRDevice && !self.hmdDevice) {
+        hmdDevice = devices[i];
       }
-
-      function animate(){
-
-        for(var i=0; i < spacePuppies.length; i++ ){
-
-          spacePuppies[i].update();
-
-        }
-
-          
-        if( VR == true ){
-          controls.update();
-        }
-
-        G.dT.value = clock.getDelta();
-        G.time.value += G.dT.value;
-       
-        fingers.update(); 
-
-        if( AUDIO == true ){
-          audioController.update();
-        }
-
-        if( VR == true ){
-          effect.render( scene, camera );
-        }else{
-          renderer.render( scene , camera );
-        }
-
-        requestAnimationFrame( animate );
-      }
-
-  
-    </script>
-
-  </body>
+    }
+  });
+</script>
 </html>
