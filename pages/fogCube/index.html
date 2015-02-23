@@ -1,0 +1,192 @@
+<html>
+
+  <head>
+    <style>
+      body{ margin: 0px; }
+    </style>
+  </head>
+
+  <body>
+
+    <script src = "../../lib/leap.min.js"               ></script>
+    <script src = "../../lib/three.min.js"              ></script>
+    <script src = "../../lib/underscore.js"             ></script>
+    <script src = "../../lib/jquery.min.js"             ></script>
+    <script src = "../../lib/TrackballControls.js"      ></script>
+    <script src = "../../lib/OrbitControls.js"          ></script>
+    <script src = "../../lib/SubdivisionModifier.js"    ></script>
+    <script src = "../../lib/PhysicsRenderer.js"        ></script>
+    
+    <script src = "../../lib/VREffect.js"               ></script>
+    <script src = "../../lib/VRControls.js"             ></script>
+    
+    <script src = "../../lib/ShaderLoader.js"           ></script>
+
+    <script src = "../../lib/UserAudio.js"              ></script>
+    <script src = "../../lib/Stream.js"                 ></script>
+    <script src = "../../lib/AudioController.js"        ></script>
+    <script src = "../../lib/AudioTexture.js"           ></script>
+    <script src = "../../lib/PositionalAudio.js"        ></script>
+    <script src = "../../lib/Loop.js"                   ></script>
+    <script src = "../../lib/Looper.js"                 ></script>
+    
+    <script src = "../../Fingers.js"                    ></script>
+    <script src = "../../utils.js"                      ></script>
+
+    <script src = "../../beings/FogCube.js"          ></script>
+    <script src = "../../beings/Link.js"             ></script>
+
+    <script>
+
+      var links = [];
+      
+      var VR = true;
+      var AUDIO = true;
+
+      var tv1 = new THREE.Vector3();
+      var tv2 = new THREE.Vector3();
+
+      var G = {
+
+        dT:{type:"f" , value:0},
+        time:{type:"f" , value:0},
+        t_audio:{type:"t",value:null},
+        fingers:{ type:"v3", value:null }
+
+      }
+
+      var loaded = 0;
+      var neededToLoad = 1;
+
+      var camera, renderer, scene , controls;
+
+      var controller = new Leap.Controller();
+      if( VR == true ){
+        controller.setOptimizeHMD(true);
+      }
+
+      var shaders = new ShaderLoader( '../../shaders' , '../../shaderChunks'   );
+
+
+      if( AUDIO == true ){
+
+        audioController = new AudioController();
+
+        G.t_audio.value = audioController.texture;
+
+      }
+
+
+      shaders.shaderSetLoaded = function(){
+        onLoad();
+      }
+
+
+      shaders.load( 'vs-fogCube' , 'fogCube' , 'vertex'   );
+      shaders.load( 'fs-fogCube' , 'fogCube' , 'fragment' );
+
+    
+      function init(){
+
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        clock = new THREE.Clock();
+
+        camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, .01, 100 );
+        //camera.position.z = .3;
+        camera.lookAt( new THREE.Vector3() );
+
+
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+
+        renderer.autoClear = false;
+
+        document.body.appendChild( renderer.domElement );
+        window.addEventListener( 'resize', onWindowResize , false );
+		    document.body.addEventListener( 'dblclick', onDoubleClick , false );
+
+        //document.body.addEventListener("keydown", onKeyDown, true);
+
+
+        if( VR == true ){
+
+          controls = new THREE.VRControls( camera );
+
+          effect = new THREE.VREffect( renderer );
+          effect.setSize( window.innerWidth, window.innerHeight );
+
+        }else{
+
+          renderer.setSize( window.innerWidth, window.innerHeight );
+
+        }
+
+
+
+        scene = new THREE.Scene();
+
+        fingers = new Fingers( camera , controller );
+           
+        fingers.add( scene ); 
+        G.fingers.value = fingers.positions; 
+        controller.connect();
+
+        fogCube = new FogCube();
+        fogCube.position.z = -1;
+        //scene.add( fogCube );
+
+
+        for( var  i = 0; i < 10; i ++ ){
+          var link = new Link( i , G.fingers.value , 'What' , '../congeal/index.html' );
+          link.position.x = ((i / 10) -.5) * .5
+          link.position.y = -.2;
+          link.position.z = -.1;
+          scene.add( link.body );
+          links.push( link );
+        }
+
+          
+
+               
+      }
+
+      function animate(){
+
+       if( VR == true ){
+          controls.update();
+        }
+
+        //fogCube.rotation.x += 
+        G.dT.value = clock.getDelta();
+        G.time.value += G.dT.value;
+
+        fogCube.rotation.x += .1 * G.dT.value;
+        fogCube.rotation.y += .3  * G.dT.value;
+        fogCube.rotation.z += .2  * G.dT.value;
+
+       
+        fingers.update(); 
+
+        for( var i = 0; i < links.length; i++ ){
+          links[i].update();
+        }
+
+        if( AUDIO == true ){
+          audioController.update();
+        }
+
+        if( VR == true ){
+          effect.render( scene, camera );
+        }else{
+          renderer.render( scene , camera );
+        }
+
+        requestAnimationFrame( animate );
+      }
+
+  
+    </script>
+
+  </body>
+</html>
