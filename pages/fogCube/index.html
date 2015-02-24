@@ -134,19 +134,9 @@
 
         fogCube = new FogCube();
         fogCube.position.z = -1;
-        //scene.add( fogCube );
+        scene.add( fogCube );
 
 
-        for( var  i = 0; i < 10; i ++ ){
-          var link = new Link( i , G.fingers.value , 'What' , '../congeal/index.html' );
-          link.position.x = ((i / 10) -.5) * .5
-          link.position.y = -.2;
-          link.position.z = -.1;
-          scene.add( link.body );
-          links.push( link );
-        }
-
-          
 
                
       }
@@ -168,11 +158,7 @@
        
         fingers.update(); 
 
-        for( var i = 0; i < links.length; i++ ){
-          links[i].update();
-        }
-
-        if( AUDIO == true ){
+         if( AUDIO == true ){
           audioController.update();
         }
 

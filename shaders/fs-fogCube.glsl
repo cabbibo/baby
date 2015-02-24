@@ -1,4 +1,3 @@
-
 uniform float time;
 
 varying vec3 vEye;
@@ -7,30 +6,32 @@ varying vec3 vNorm;
 
 varying vec2 vUv;
 
+// trying to port
+// https://www.shadertoy.com/view/llfGWB
+// to this world
 $triNoise3D
+$hsv
 
 
-// TODO: make sure that once it hits the side of
-// the cube is stops adding
-#define STEPS 20
-vec4 fogMap( vec3 ro , vec3 rd ){
-
-
-  float l = 0.;
-
-  for( int i = 0; i < STEPS; i++ ){
-
-    vec3 p = ro + rd * float(i) / 1.;
-
+float posToFloat( vec3 p ){
+ 
+    float f = triNoise3D( p * .4, .01 , time / 2. );
+    return f;
     
-    l += sin( p.x * 20.);// triNoise3D( p * .6 , float(i) * 2.1 , time * .001 );
-    l += sin( p.y * 20. );// triNoise3D( p * .6 , float(i) * 2.1 , time * .001 );
+}
 
-  }
+#define STEPS 10
+float fogCube( vec3 ro , vec3 rd , vec3 n ){
+ 
+    float lum = 1.;
+    for( int i = 0; i < STEPS; i++ ){
+        vec3 p = ro + rd * .1  * float( i );
 
-  float a = (l / float( STEPS ));
- return vec4( a * vec3( 1. , 0.5 , 0.3 ) , a * 2.  );
-
+        lum += posToFloat( p );// + sin( p.y * 3. ) + sin( p.z * 5.);
+    }
+    
+    return lum * 4.4;    
+    
 }
 
 void main(){
@@ -38,23 +39,60 @@ void main(){
 
 
 
-  vec3 ro = vMPos;
+  vec3 pos = vMPos;
+  vec3 ro = pos;
   vec3 rd = normalize( vEye );
 
-  vec4 col = fogMap( ro , rd );
-  
+  vec3 col = vec3( 0. );
+ 
+   
   
 
-  float l = .03;
-  float r = 1. - .03; 
+  float l = .003;
+  float r = 1. - .003; 
   // giving border
   if( vUv.x < l || vUv.x > r || vUv.y < l || vUv.y > r ){
 
-    col = vec4( vec3( 0.) , 1. );// vec4( vNorm * .5  + .5 , 1. );
+    col = vec3( 0.);// vec4( vNorm * .5  + .5 , 1. );
+
+  }else{
+
+     // vec3 pos = ro + rd * res.x;
+      
+      vec3 lightPos = vec3( 5. , 5. , 5. );
+      
+      lightPos -= pos;
+      lightPos = normalize( lightPos );
+      
+      vec3 refl = reflect( lightPos , vNorm );
+      
+      float eyeMatch = max( 0. , dot( refl , rd ) );
+      float lamb =max( 0.0 , dot( lightPos , vNorm ));
+      
+      
+      float lum = fogCube( pos , rd * 2. , vNorm );
+     // col = norm * .5 + .5;
+    
+      float lu = max( 0.0 , -dot( lightPos , vNorm ));
+      
+      vec3 nCol = hsv( posToFloat( pos) + .3 , .4 , 1.);
+      nCol *=pow( lum / 20. , min( 5. , 1./ eyeMatch ) ) * eyeMatch;
+      
+      vec3 col2 = hsv( posToFloat( pos) + .6, .6, .4);
+      nCol += lamb * col2 * pow( lum / 20. , min( 5. , 1./eyeMatch) ) * ( 1. - eyeMatch );
+      
+      vec3 col3 = hsv( posToFloat( pos) + .6, .9, .2);
+      nCol += col3 * pow( lum / 20. , min( 5. , 1./eyeMatch) ) * ( 1. - lamb );
+      
+     // nCol +=  vec3( .2 ) * ( 1. - eyeMatch );
+     // nCol *= hsv( abs(sin(lum * .1)) , .5 , 1. );
+      
+      //nCol += pow( eyeMatch , 10. ) * vec3( 1. );//hsv( eyeMatch * 1. , .5 , 1. );
+      col += nCol;
 
   }
 
   
-  gl_FragColor = col;
+  gl_FragColor = vec4( col , 1. );
 
 }

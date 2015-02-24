@@ -16,7 +16,7 @@ function FogCube(){
 
   });
 
-  var geo = new THREE.BoxGeometry( .8 , .8 , .8 , 30 , 30 , 30 );
+  var geo = new THREE.BoxGeometry( .8 , .8 , .8 , 10 , 10 , 10 );
 
   var mesh = new THREE.Mesh( geo , mat );
 
