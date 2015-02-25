@@ -87,6 +87,7 @@
       var controller = new Leap.Controller();
 
       initThree();
+      animate();
       
       if( VR == true ){
         controller.setOptimizeHMD(true);
@@ -570,7 +571,6 @@
         if( loaded == neededToLoad ){
           allLoaded = true;
           init();
-          animate();
         }
 
       }
