@@ -9,15 +9,20 @@
     padding:0;
     overflow: hidden;
   }
-  iframe {
-    margin: 0;
-    padding: 0;
+  .fit {
+    position:absolute;
     width: 100%;
     height: 100%;
+    top: 0px;
+    left: 0px;
+    margin: 0px;
+    padding: 0px;
   }
 </style>
 <body>
-  <iframe id="container" src="pages/landing.html" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" allowfullscreen="true"></iframe>
+  <iframe id="container" class="fit" src="pages/landing.html" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" allowfullscreen="false"></iframe>
+  
+  <div class="fit"></div> <!-- This div blocks any mouse and keyboard events to iframe -->
 </body>
 <script>
 
@@ -34,7 +39,8 @@
     }
   }
 
-  function onDoubleClick(){
+  function onDoubleClick(e){
+    e.preventDefault();
     enterVr();
   }
 
@@ -51,7 +57,7 @@
   }
   
   window.addEventListener("keydown", onkey, true);
-	window.addEventListener( 'dblclick', onDoubleClick , false );
+	window.addEventListener('dblclick', onDoubleClick , false );
 
   var container = document.getElementById('container');
 
