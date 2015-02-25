@@ -17,7 +17,7 @@
   }
 </style>
 <body>
-  <iframe id="container" src="pages/landing.html" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
+  <iframe id="container" src="pages/landing.html" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" allowfullscreen="true"></iframe>
 </body>
 <script>
 
@@ -34,6 +34,10 @@
     }
   }
 
+  function onDoubleClick(){
+    enterVr();
+  }
+
   function enterVr() {
     if (container.requestFullscreen) {
       container.requestFullscreen({ vrDisplay: hmdDevice });
@@ -47,6 +51,7 @@
   }
   
   window.addEventListener("keydown", onkey, true);
+	window.addEventListener( 'dblclick', onDoubleClick , false );
 
   var container = document.getElementById('container');
 

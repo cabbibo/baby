@@ -2,7 +2,7 @@
 
   <head>
     <style>
-      body{ margin: 0px; }
+      html,body{ margin: 0px; padding: 0px; }
     </style>
   </head>
 
@@ -33,10 +33,12 @@
     <script src = "../../Fingers.js"                    ></script>
     <script src = "../../utils.js"                      ></script>
 
-    <script src = "SpacePuppy.js"          ></script>
+    <script src = "../../beings/FogCube.js"          ></script>
+    <script src = "../../beings/Link.js"             ></script>
 
     <script>
 
+      var links = [];
       
       var VR = true;
       var AUDIO = true;
@@ -48,7 +50,6 @@
 
         dT:{type:"f" , value:0},
         time:{type:"f" , value:0},
-        fogColor:{ type:"v3" , value: new THREE.Vector3() },
         t_audio:{type:"t",value:null},
         fingers:{ type:"v3", value:null }
 
@@ -59,43 +60,30 @@
 
       var camera, renderer, scene , controls;
 
-      var BEINGS = {};
-
-      var spacePuppies = [];
-
       var controller = new Leap.Controller();
       if( VR == true ){
         controller.setOptimizeHMD(true);
       }
 
-      var shaders = new ShaderLoader( 'shaders' , '../../shaderChunks'   );
+      var shaders = new ShaderLoader( '../../shaders' , '../../shaderChunks'   );
 
 
       if( AUDIO == true ){
 
         audioController = new AudioController();
-    
 
         G.t_audio.value = audioController.texture;
 
-
-        var looper = new Looper( audioController , G.time , {
-
-          beatsPerMinute: 96,
-          beatsPerMeasure: 4,
-          measuresPerLoop: 8
-
-        });
-
       }
+
 
       shaders.shaderSetLoaded = function(){
         onLoad();
       }
 
 
-      shaders.load( 'vs-spacePuppy' , 'spacePuppy' , 'vertex'   );
-      shaders.load( 'fs-spacePuppy' , 'spacePuppy' , 'fragment' );
+      shaders.load( 'vs-fogCube' , 'fogCube' , 'vertex'   );
+      shaders.load( 'fs-fogCube' , 'fogCube' , 'fragment' );
 
     
       function init(){
@@ -106,7 +94,7 @@
         clock = new THREE.Clock();
 
         camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, .01, 100 );
-        camera.position.z = 0.001;
+        //camera.position.z = .3;
         camera.lookAt( new THREE.Vector3() );
 
 
@@ -144,45 +132,33 @@
         G.fingers.value = fingers.positions; 
         controller.connect();
 
+        fogCube = new FogCube();
+        fogCube.position.z = -1;
+        scene.add( fogCube );
 
-        spacePuppiesCenter = new THREE.Vector3(0 , 0 , -.5 );
 
-        for( var  i = 0; i < 20; i++ ){
-          var spacePuppy = new SpacePuppy( i ,  spacePuppiesCenter , G.fingers.value , 'audio/drop.mp3');
-          spacePuppy.position.x = ( Math.random() - .5 )
-          spacePuppy.position.y = ( Math.random() - .5 )
-          spacePuppy.position.z = ( Math.random() - .5 )
-          spacePuppies.push( spacePuppy );
-          scene.add( spacePuppy.body );
-        }
 
-        for(var  i=0; i <spacePuppies.length; i++ ){
-  
-          spacePuppies[i].assignBrethren( spacePuppies );
-
-        }
-       
+               
       }
 
       function animate(){
 
-        for(var i=0; i < spacePuppies.length; i++ ){
-
-          spacePuppies[i].update();
-
-        }
-
-          
-        if( VR == true ){
+       if( VR == true ){
           controls.update();
         }
 
+        //fogCube.rotation.x += 
         G.dT.value = clock.getDelta();
         G.time.value += G.dT.value;
+
+        fogCube.rotation.x += .1 * G.dT.value;
+        fogCube.rotation.y += .3  * G.dT.value;
+        fogCube.rotation.z += .2  * G.dT.value;
+
        
         fingers.update(); 
 
-        if( AUDIO == true ){
+         if( AUDIO == true ){
           audioController.update();
         }
 

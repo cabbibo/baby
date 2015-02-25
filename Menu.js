@@ -3,8 +3,11 @@ function Menu( links , touchables , title , params ){
 
   this.params = params || {};
 
-  this.params.height = this.params.height || .3;
-  this.params.width  = this.params.width  || .05;
+  this.params.radius = this.params.radius || .12;
+  this.params.crispness =  this.params.crispness || 30;
+
+
+  this.labelMaker = new TextCreator( this.params.crispness );
 
 
   
@@ -53,23 +56,36 @@ function Menu( links , touchables , title , params ){
 
   this.body.add( this.button.body );
 
+  var textScale = 2 / this.params.crispness
 
+  this.titleMesh = this.labelMaker.createMesh( title );
+  this.titleMesh.scale.multiplyScalar( textScale );
+  this.titleMesh.position.y = this.button.ratio * 1.3;
 
-
-
+  this.button.body.add( this.titleMesh ); 
 
   for( var i = 0; i < links.length; i++ ){
 
+    var theta = (.4 - ( i / links.length )) * Math.PI;
     var l = new Link( this.tmpTouch, links[i][0] , links[i][1] );
     this.links.push( l );
-  
-    l.position.x = this.params.width;
-    l.position.y = ((i / links.length)-.5) * this.params.height;
+
+    var t = this.labelMaker.createMesh( links[i][1] );
+ 
+    t.scale.multiplyScalar( textScale );
+    console.log( 'TOTOAL' );
+    console.log( t.totalWidth );
+    t.position.x = t.totalWidth * textScale * .5 + l.ratio
+
+    l.position.x = this.params.radius * Math.cos( theta );
+    l.position.y = this.params.radius * Math.sin( theta );
     l.position.z = 0;
 
+    l.body.add( t );
+    l.titleMesh = t;
+    //t.position.x = t.totalWidth / 20.;
+
   }
-
-
 
 
 }
@@ -87,8 +103,11 @@ Menu.prototype.update = function(){
   } 
 
   this.button.update();
-  for( var i = 0; i < this.links.length; i++ ){
-    this.links[i].update();
+
+  if( this.opened === true ){
+    for( var i = 0; i < this.links.length; i++ ){
+      this.links[i].update();
+    }
   }
 
 
