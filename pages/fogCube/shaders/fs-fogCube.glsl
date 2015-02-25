@@ -15,22 +15,25 @@ $hsv
 
 float posToFloat( vec3 p ){
  
-    float f = triNoise3D( p * .4, .01 , time / 2. );
+    float f = triNoise3D( p * 1.4, .5 , time  );
     return f;
     
 }
 
 #define STEPS 10
-float fogCube( vec3 ro , vec3 rd , vec3 n ){
- 
+vec3 fogCube( vec3 ro , vec3 rd , vec3 n ){
+
+    vec3 col = vec3( 0. );
     float lum = 1.;
     for( int i = 0; i < STEPS; i++ ){
-        vec3 p = ro + rd * .1  * float( i );
+        vec3 p = ro + rd * .003  * float( i );
 
-        lum += posToFloat( p );// + sin( p.y * 3. ) + sin( p.z * 5.);
+
+        lum +=  posToFloat( p );
+        col += lum *  hsv(  3. * posToFloat( p ) , .5 , .5 );
     }
     
-    return lum * 4.4;    
+    return lum * col * .008;    
     
 }
 
@@ -48,14 +51,16 @@ void main(){
    
   
 
-  float l = .003;
-  float r = 1. - .003; 
+  float l = .00;
+  float r = 1. - l; 
   // giving border
-  if( vUv.x < l || vUv.x > r || vUv.y < l || vUv.y > r ){
+ // if( vUv.x < l || vUv.x > r || vUv.y < l || vUv.y > r ){
 
-    col = vec3( 0.);// vec4( vNorm * .5  + .5 , 1. );
+ //   col = vec3( 0. );
+    //col = vNorm * .5  + .5;
 
-  }else{
+
+//  }else{
 
      // vec3 pos = ro + rd * res.x;
       
@@ -70,27 +75,12 @@ void main(){
       float lamb =max( 0.0 , dot( lightPos , vNorm ));
       
       
-      float lum = fogCube( pos , rd * 2. , vNorm );
-     // col = norm * .5 + .5;
-    
-      float lu = max( 0.0 , -dot( lightPos , vNorm ));
-      
-      vec3 nCol = hsv( posToFloat( pos) + .3 , .4 , 1.);
-      nCol *=pow( lum / 20. , min( 5. , 1./ eyeMatch ) ) * eyeMatch;
-      
-      vec3 col2 = hsv( posToFloat( pos) + .6, .6, .4);
-      nCol += lamb * col2 * pow( lum / 20. , min( 5. , 1./eyeMatch) ) * ( 1. - eyeMatch );
-      
-      vec3 col3 = hsv( posToFloat( pos) + .6, .9, .2);
-      nCol += col3 * pow( lum / 20. , min( 5. , 1./eyeMatch) ) * ( 1. - lamb );
-      
-     // nCol +=  vec3( .2 ) * ( 1. - eyeMatch );
-     // nCol *= hsv( abs(sin(lum * .1)) , .5 , 1. );
-      
-      //nCol += pow( eyeMatch , 10. ) * vec3( 1. );//hsv( eyeMatch * 1. , .5 , 1. );
-      col += nCol;
+      vec3 fogCol = fogCube( pos , rd * 2. , vNorm );
+       
+      col = fogCol;
 
-  }
+    
+//  }
 
   
   gl_FragColor = vec4( col , 1. );
