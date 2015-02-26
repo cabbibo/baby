@@ -1,0 +1,233 @@
+<html>
+
+  <head>
+    <style>
+      html,body{ margin: 0px; padding: 0px; }
+    </style>
+  </head>
+
+  <body>
+
+    <script src = "../../lib/leap.min.js"               ></script>
+    <script src = "../../lib/three.min.js"              ></script>
+    <script src = "../../lib/underscore.js"             ></script>
+    <script src = "../../lib/jquery.min.js"             ></script>
+    <script src = "../../lib/TrackballControls.js"      ></script>
+    <script src = "../../lib/OrbitControls.js"          ></script>
+    <script src = "../../lib/SubdivisionModifier.js"    ></script>
+    <script src = "../../lib/PhysicsRenderer.js"        ></script>
+    
+    <script src = "../../lib/VREffect.js"               ></script>
+    <script src = "../../lib/VRControls.js"             ></script>
+    
+    <script src = "../../lib/ShaderLoader.js"           ></script>
+
+    <script src = "../../lib/UserAudio.js"              ></script>
+    <script src = "../../lib/Stream.js"                 ></script>
+    <script src = "../../lib/AudioController.js"        ></script>
+    <script src = "../../lib/AudioTexture.js"           ></script>
+    <script src = "../../lib/PositionalAudio.js"        ></script>
+    <script src = "../../lib/Loop.js"                   ></script>
+    <script src = "../../lib/Looper.js"                 ></script>
+    
+    <script src = "../../lib/TextCreator.js"            ></script>
+
+    <script src = "RepelerMesh.js"                ></script>
+    <script src = "GEM.js"                        ></script>
+    <script src = "Text.js"                        ></script>
+
+    <script src = "fonts/helvetiker_bold.typeface.js"></script>
+    <script src = "fonts/helvetiker_regular.typeface.js"></script>
+    
+    <script src = "../../Fingers.js"                    ></script>
+    <script src = "../../utils.js"                      ></script>
+
+    <script src = "../../Link.js"                       ></script>
+    <script src = "../../Touchable.js"                  ></script>
+    <script src = "../../Menu.js"                       ></script>
+    
+    <script>
+
+      var links = [];
+      var gems = [];
+      
+      var VR = true;
+      var AUDIO = true;
+
+      var tv1 = new THREE.Vector3();
+      var tv2 = new THREE.Vector3();
+
+      var matcapTurq  = THREE.ImageUtils.loadTexture( 'img/matcap/turq.jpg'  );
+      var matcapBlood = THREE.ImageUtils.loadTexture( 'img/matcap/blood.jpg' );
+      var matcapDark  = THREE.ImageUtils.loadTexture( 'img/matcap/dark.jpg'  );
+      var matcapMetal = THREE.ImageUtils.loadTexture( 'img/matcap/metal.jpg' );
+
+
+      var counter = 0;
+      var G = {
+
+        dT:{type:"f" , value:0},
+        time:{type:"f" , value:0},
+        t_matcap:{ type:"t" , value: matcapDark },
+        t_blood:{ type:"t" , value: matcapDark },
+        fogColor:{ type:"v3" , value: new THREE.Vector3() },
+        t_audio:{type:"t",value:null},
+        fingers:{ type:"v3", value:[] }
+
+      }
+
+      var loaded = 0;
+      var neededToLoad = 1;
+
+      var camera, renderer, scene , controls;
+
+      var controller = new Leap.Controller();
+      if( VR == true ){
+        controller.setOptimizeHMD(true);
+      }
+
+      var shaders = new ShaderLoader( 'shaders' , '../../shaderChunks'   );
+
+
+      if( AUDIO == true ){
+
+        audioController = new AudioController();
+
+        G.t_audio.value = audioController.texture;
+
+      }
+
+
+      shaders.shaderSetLoaded = function(){
+        onLoad();
+      }
+
+
+      shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+      
+      shaders.load( 'vs-sem'  , 'sem' , 'vertex' );
+      shaders.load( 'fs-sem' , 'sem' , 'fragment' );
+
+      shaders.load( 'vs-flesh'  , 'flesh' , 'vertex' );
+      shaders.load( 'fs-flesh' , 'flesh' , 'fragment' );    
+      
+      function init(){
+
+        // From utils.js
+        initThree();
+
+        fingers = new Fingers( camera , controller );
+           
+        fingers.add( scene ); 
+        G.fingers.value = fingers.positions; 
+        controller.connect();
+
+
+        console.log('HEEHS');
+        console.log( fingers );
+
+        var links = [ 
+          
+          [ '../congeal/'          , 'Congel'            ],
+          [ '../fogCube/'          , 'Sun Sun Sun Sun'   ],
+          [ '../text/'             , 'Notes'             ],
+          [ '../womb/'             , 'Womb'              ],
+          [ '../impossible/'       , 'Impossible'        ],
+          [ '../rainbowMembrane/'  , 'Rainbow Membrane'  ],
+
+        ];
+
+
+        // abbreving to fings, cuz goddam thats a cool sounding word
+        var fings = []
+
+       // fings.push( G.fingers.value[4] );
+        fings.push( G.fingers.value[9] );
+        fings.push( G.fingers.value[9+25] );
+
+        menu = new Menu( links , fings , 'MENU' );
+
+        menu.position.x = -.2;
+        //menu.body.rotation.y = .2;
+        menu.body.lookAt( new THREE.Vector3() );
+        scene.add( menu.body );
+
+
+
+
+        var t = new Text('VR', 3 );
+        t.scale.multiplyScalar( .1 );
+
+        t.position.z = -.3;
+        t.position.y = 0;
+        t.lookAt( new THREE.Vector3() );
+        t.updateMatrix();
+
+        gem = new RepelerMesh( 'Parameters' , t, fingers.meshes , {
+          
+          vs: shaders.vertexShaders.sem,
+          fs: shaders.fragmentShaders.sem,
+
+
+      
+          soul:{
+
+            repulsionPower:     { type:"f" , value: -.0003, constraints:[-300  , 0] },
+            repulsionRadius:     { type:"f" , value: .3 , constraints:[ 0  , 1000] },
+            //dampening:     { type:"f" , value: .8 , constraints:[ 0  , 1000] },
+
+          },
+
+          body:{
+            //t_refl:{type:"t" , value:reflectionCube},
+            //t_refr:{type:"t" , value:reflectionCube },
+            custom1:{type:"f" , value:.9 , constraints:[ .8 , 1 ]},
+            t_sem:{type:"t" , value: matcapBlood }
+          }
+
+        }); 
+
+        gem.soul.reset( gem.t_og.value );
+        gem.toggle();
+
+        gems.push( gem );
+
+      }
+
+      function animate(){
+
+        if( VR == true ){
+          controls.update();
+        }
+
+        //fogCube.rotation.x += 
+        G.dT.value = clock.getDelta();
+        G.time.value += G.dT.value;
+      
+        for( var i =0; i < gems.length; i++ ){
+          gems[i].update();
+        }
+
+ 
+        fingers.update(); 
+
+        menu.update();
+
+        if( AUDIO == true ){
+          audioController.update();
+        }
+
+        if( VR == true ){
+          effect.render( scene, camera );
+        }else{
+          renderer.render( scene , camera );
+        }
+
+        requestAnimationFrame( animate );
+      }
+
+  
+    </script>
+
+  </body>
+</html>

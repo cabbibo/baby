@@ -100,7 +100,7 @@ PhysicsText.prototype.kill = function(length){
   var toTween = { value: 0 }
 
 
-  var tween = new G.tween.Tween( this.opacityTweener ).to( toTween , l );
+  var tween = new TWEEN.Tween( this.opacityTweener ).to( toTween , l );
 
   tween.onUpdate( function( t ){
 
@@ -169,12 +169,13 @@ PhysicsText.prototype.transport = function( position ){
 
 
 
-PhysicsText.prototype.activate = function(){
+PhysicsText.prototype.activate = function( pos ){
 
+  var pos = pos || new THREE.Vector3( 0 , 0 , -40 );
   this.active = true;
   this.alive.value = 1;
 
-  this.transport( new THREE.Vector3( 0 , 0 , -4 ) );
+  this.transport( pos );
   scene.add( this.particles );
 
 }

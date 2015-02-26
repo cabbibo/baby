@@ -30,8 +30,9 @@
     <script src = "../../lib/Loop.js"                   ></script>
     <script src = "../../lib/Looper.js"                 ></script>
     
-    <script src = "../../beings/Link.js"             ></script>
+    <script src = "../../beings/Link.js"                ></script>
 
+    <script src = "TouchText.js"                        ></script>
     <script src = "TextParticles.js"                    ></script>
     <script src = "PhysicsText.js"                      ></script>
 
@@ -44,9 +45,12 @@
     <script src = "../../Touchable.js"                  ></script>
     <script src = "../../Menu.js"                       ></script>
 
+    <script src = "Tween.js"                            ></script>
+
     <script>
 
       var links = [];
+      var touchText = [];
       
       var VR = true;
       var AUDIO = true;
@@ -157,10 +161,21 @@
         }); 
 
         
-        var s = "I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING" 
+        var touch = new TouchText( G.fingers.value , "To such men the desperate and horrible thought has come that perhaps the whole of human life is but a bad joke, a violent and illfated abortion of the primal mother, a savage and dismal castrophe of nature. To them, too, however, the other thought has come that man is perhaps not merely a half- rational animal but a child of the gods and destined to immortality." );
+
+        
+
+        touch.position.z = -.2;
+        scene.add( touch.body );
+
+        touchText.push( touch );
+/*
+
+
+         var s = "I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING" 
 
         note1 = new PhysicsText( s , G.fingers.value );
-        note1.activate();
+        note1.activate();*/
 
 
         
@@ -202,12 +217,19 @@
           controls.update();
         }
 
+        TWEEN.update();
         //fogCube.rotation.x += 
         G.dT.value = clock.getDelta();
         G.time.value += G.dT.value;
 
-        fingers.update(); 
-        note1.update();
+        fingers.update();
+
+        for( var i = 0; i < touchText.length; i++ ){
+ 
+          touchText[i].update(); 
+          touchText[i].text.update();
+
+        } 
         menu.update();
 
         if( AUDIO == true ){
