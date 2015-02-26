@@ -12,7 +12,7 @@
     this.letterWidth    = params.letterWidth    || .011;
 
     this.lineHeight     = params.lineHeight     || .02;
-    this.lineLength     = params.lineLength     || 80;
+    this.lineLength     = params.lineLength     || 40;
 
     this.vertexShader   = params.vertexShader   || null;// TODO: default
     this.fragmentShader = params.fragmentShader || null;// TODO: default
