@@ -36,6 +36,14 @@
 
     <script src = "initTones.js">                 ></script>
 
+
+    <script src = "../../lib/TextCreator.js"            ></script>
+    
+
+    <script src = "../../Link.js"                       ></script>
+    <script src = "../../Touchable.js"                  ></script>
+    <script src = "../../Menu.js"                       ></script>
+
     <script>
 
       
@@ -249,6 +257,34 @@
         }
 
 
+        
+          var links = [ 
+            
+            [ '../landing.html'      , 'Landing'           ],
+            [ '../congeal/'          , 'Congel'            ],
+            [ '../fogCube/'          , 'Sun Sun Sun Sun'   ],
+            [ '../text/'             , 'Notes'             ],
+            [ '../womb/'             , 'Womb'              ],
+            [ '../impossible/'       , 'Impossible'        ],
+
+          ];
+
+
+          // abbreving to fings, cuz goddam thats a cool sounding word
+          var fings = []
+
+         // fings.push( G.fingers.value[4] );
+          fings.push( G.fingers.value[9] );
+          fings.push( G.fingers.value[9+25] );
+
+          menu = new Menu( links , fings , 'MENU' );
+
+          menu.position.x = -.2;
+          //menu.body.rotation.y = .2;
+          menu.body.lookAt( new THREE.Vector3() );
+          scene.add( menu.body );
+
+
 
         console.log( 'hello' );
        }
@@ -387,6 +423,8 @@
           G.time.value += G.dT.value;
           
           updateFingers( controller.frame() );
+
+          menu.update();
 
           if( allLoaded == true ){
 

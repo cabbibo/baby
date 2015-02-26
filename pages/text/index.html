@@ -30,11 +30,19 @@
     <script src = "../../lib/Loop.js"                   ></script>
     <script src = "../../lib/Looper.js"                 ></script>
     
+    <script src = "../../beings/Link.js"             ></script>
+
+    <script src = "TextParticles.js"                    ></script>
+    <script src = "PhysicsText.js"                      ></script>
+
+    <script src = "../../lib/TextCreator.js"            ></script>
+    
     <script src = "../../Fingers.js"                    ></script>
     <script src = "../../utils.js"                      ></script>
 
-    <script src = "../../beings/FogCube.js"          ></script>
-    <script src = "../../beings/Link.js"             ></script>
+    <script src = "../../Link.js"                       ></script>
+    <script src = "../../Touchable.js"                  ></script>
+    <script src = "../../Menu.js"                       ></script>
 
     <script>
 
@@ -65,7 +73,7 @@
         controller.setOptimizeHMD(true);
       }
 
-      var shaders = new ShaderLoader( '../../shaders' , '../../shaderChunks'   );
+      var shaders = new ShaderLoader( 'shaders' , '../../shaderChunks'   );
 
 
       if( AUDIO == true ){
@@ -82,8 +90,9 @@
       }
 
 
-      shaders.load( 'vs-fogCube' , 'fogCube' , 'vertex'   );
-      shaders.load( 'fs-fogCube' , 'fogCube' , 'fragment' );
+      shaders.load( 'vs-text' , 'text' , 'vertex'     );
+      shaders.load( 'fs-text' , 'text' , 'fragment'   );
+      shaders.load( 'ss-text' , 'text' , 'simulation' );
 
     
       function init(){
@@ -132,12 +141,58 @@
         G.fingers.value = fingers.positions; 
         controller.connect();
 
-        fogCube = new FogCube();
-        fogCube.position.z = -1;
-        scene.add( fogCube );
+     
+        /*
+  
+         Text
+
+        */
+
+        text = new TextParticles({
+          vertexShader:   shaders.vs.text,
+          fragmentShader: shaders.fs.text,
+          lineLength:     60,
+          //letterWidth:    40,
+          //lineHeight:     40
+        }); 
+
+        
+        var s = "I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING I AM TEXTING I AM TEXTING I AM TESTING I AM TESTING I AM TEXTING" 
+
+        note1 = new PhysicsText( s , G.fingers.value );
+        note1.activate();
 
 
+        
+        var links = [ 
+          
+          [ '../landing.html'      , 'Landing'           ],
+          [ '../congeal/'          , 'Congel'            ],
+          [ '../fogCube/'          , 'Sun Sun Sun Sun'   ],
+          [ '../womb/'             , 'Womb'              ],
+          [ '../impossible/'       , 'Impossible'        ],
+          [ '../rainbowMembrane/'  , 'Rainbow Membrane'  ],
 
+        ];
+
+
+        // abbreving to fings, cuz goddam thats a cool sounding word
+        var fings = []
+
+       // fings.push( G.fingers.value[4] );
+        fings.push( G.fingers.value[9] );
+        fings.push( G.fingers.value[9+25] );
+
+        menu = new Menu( links , fings , 'MENU' );
+
+        menu.position.x = -.2;
+        //menu.body.rotation.y = .2;
+        menu.body.lookAt( new THREE.Vector3() );
+        scene.add( menu.body );
+
+
+        //note1.particles.position.z = -.4;
+       // note1.particles.
                
       }
 
@@ -151,14 +206,11 @@
         G.dT.value = clock.getDelta();
         G.time.value += G.dT.value;
 
-        fogCube.rotation.x += .1 * G.dT.value;
-        fogCube.rotation.y += .3  * G.dT.value;
-        fogCube.rotation.z += .2  * G.dT.value;
-
-       
         fingers.update(); 
+        note1.update();
+        menu.update();
 
-         if( AUDIO == true ){
+        if( AUDIO == true ){
           audioController.update();
         }
 

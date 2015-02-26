@@ -29,10 +29,15 @@
     <script src = "../../lib/PositionalAudio.js"        ></script>
     <script src = "../../lib/Loop.js"                   ></script>
     <script src = "../../lib/Looper.js"                 ></script>
+ 
+    <script src = "../../lib/TextCreator.js"            ></script>
     
     <script src = "../../Fingers.js"                    ></script>
     <script src = "../../utils.js"                      ></script>
 
+    <script src = "../../Link.js"                       ></script>
+    <script src = "../../Touchable.js"                  ></script>
+    <script src = "../../Menu.js"                       ></script>
     <script src = "FogCube.js"          ></script>
     <script>
 
@@ -136,6 +141,33 @@
         scene.add( fogCube );
 
 
+        var links = [ 
+          
+          [ '../landing.html'      , 'Landing'           ],
+          [ '../congeal/'          , 'Congel'            ],
+          [ '../fogCube/'          , 'Sun Sun Sun Sun'   ],
+          [ '../text/'             , 'Notes'             ],
+          [ '../womb/'             , 'Womb'              ],
+          [ '../rainbowMembrane/'  , 'Rainbow Membrane'  ],
+
+        ];
+
+
+        // abbreving to fings, cuz goddam thats a cool sounding word
+        var fings = []
+
+       // fings.push( G.fingers.value[4] );
+        fings.push( G.fingers.value[9] );
+        fings.push( G.fingers.value[9+25] );
+
+        menu = new Menu( links , fings , 'MENU' );
+
+        menu.position.x = -.2;
+        //menu.body.rotation.y = .2;
+        menu.body.lookAt( new THREE.Vector3() );
+        scene.add( menu.body );
+
+
 
                
       }
@@ -155,7 +187,8 @@
         fogCube.rotation.z = 2 // * G.dT.value;
 
        
-        fingers.update(); 
+        fingers.update();
+        menu.update(); 
 
          if( AUDIO == true ){
           audioController.update();
