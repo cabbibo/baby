@@ -1,0 +1,240 @@
+<html>
+
+  <head>
+    <style>
+      body{ margin: 0px; }
+    </style>
+  </head>
+
+  <body>
+
+    <script src = "../../lib/three.min.js"                ></script>
+    <script src = "../../lib/jquery.min.js"               ></script>
+    <script src = "../../lib/TrackballControls.js"        ></script>
+    <script src = "../../lib/leap.min.js"                 ></script>
+    <script src = "../../lib/underscore.js"               ></script>
+    
+    <script src = "../../lib/AudioController.js"          ></script>
+    <script src = "../../lib/AudioTexture.js"             ></script>
+    <script src = "../../lib/Stream.js"                   ></script>
+    <script src = "../../lib/UserAudio.js"                ></script>
+  
+    <script src = "../../lib/VREffect.js"                 ></script>
+    <script src = "../../lib/VRControls.js"               ></script> 
+    <script src = "../../lib/ShaderLoader.js"            ></script>
+
+    <script src = "../../utils.js"                      ></script>
+
+    <script src = "Hypercube.js"                          ></script>
+
+    <script>
+
+
+      var G = {};
+      var VR = true;
+
+      var matcap = THREE.ImageUtils.loadTexture('img/rough-aluminium.jpg');
+      var text = THREE.ImageUtils.loadTexture('img/easyFun.png');
+
+      var uniforms = {
+
+        t_matcap:{ type:"t" , value: matcap },
+        t_text:{type:"t", value:text},
+        t_audio:{type:"t",value:null},
+        stepDepth:{ type:"f" , value: .03 },
+        oscillationSize:{ type:"f" , value: 30. },
+        lightPos:{ type:"v3" , value: new THREE.Vector3( 2 , 0 , 0 ) },
+        time:{ type:"f", value: 0 }
+      }
+
+      var meshes = [];
+      var camera, renderer, scene , controls;
+      
+      var vs, fs;
+
+      var geometry, material , light;
+
+      var stats;
+
+      var shaders = new ShaderLoader( 'shaders' );
+
+      shaders.shaderSetLoaded = function(){
+        init();
+        animate();
+        stream.play();
+      }
+
+      shaders.load( 'vs-bifrost' , 'bifrost' , 'vertex' );
+      shaders.load( 'fs-bifrost' , 'bifrost' , 'fragment' );
+
+      shaders.load( 'vs-hologram' , 'hologram' , 'vertex' );
+      shaders.load( 'fs-hologram' , 'hologram' , 'fragment' );
+
+      var audioController = new AudioController();
+     // audioController.mute.gain.value = 0;
+      var stream = new Stream(  'laplander.mp3',audioController  );
+     
+      uniforms.t_audio.value = audioController.texture; 
+      /*var userAudio = new UserAudio( audioController );
+      userAudio.onStreamCreated = function(){
+
+        console.log('asds');
+        //onLoad();
+
+      }*/
+
+      var controller = new Leap.Controller();
+      if( VR == true ){
+        controller.setOptimizeHMD(true);
+      }
+
+      var title;
+
+
+      function init(){
+
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+
+        camera = new THREE.PerspectiveCamera( 65 , w/h , .01 , 100 );
+        camera.position.z = .001;
+
+        //controls = new THREE.TrackballControls( camera );
+        scene = new THREE.Scene();
+
+        geometry = new THREE.PlaneGeometry( 2, 2 );
+        geometry.computeTangents();
+
+       
+
+        var dir = [
+
+          [1,0,0],
+          [-1,0,0],
+          [0,1,0],
+          [0,-1,0],
+          [0,0,1],
+          [0,0,-1],
+
+        ];
+
+        for( var i = 0; i < dir.length; i++ ){
+
+          var m = Hologram( 
+              geometry, 
+              uniforms,
+              shaders.vertexShaders.hologram,
+              shaders.fragmentShaders.hologram
+           );
+
+          m.position.x = dir[i][0]*1; 
+          m.position.y = dir[i][1]*1; 
+          m.position.z = dir[i][2]*1; 
+ 
+          m.lookAt( new THREE.Vector3() );
+          scene.add( m );
+          meshes.push( m );
+
+
+        }
+
+        title = Hologram( 
+            geometry, 
+            uniforms,
+            shaders.vertexShaders.bifrost,
+            shaders.fragmentShaders.bifrost,
+            true
+         );
+
+        title.scale.multiplyScalar( .3 );
+
+        title.position.z = -.2;
+
+        scene.add( title );  
+
+        renderer = new THREE.WebGLRenderer();
+
+        if( VR == true ){
+
+          controls = new THREE.VRControls( camera );
+
+          effect = new THREE.VREffect( renderer );
+          effect.setSize( window.innerWidth, window.innerHeight );
+
+        }else{
+
+          renderer.setSize( window.innerWidth, window.innerHeight );
+
+        }
+
+        document.body.appendChild( renderer.domElement );
+        
+        // Making sure our renderer is always the right size
+       // window.addEventListener( 'resize', onWindowResize , false );
+   
+
+
+      }
+
+      function animate(){
+
+        audioController.update();
+        //controls.update();
+
+        //if( VR == true ){
+          controls.update();
+        //}
+
+
+        title.rotation.y += .007 //* Math.sin((i +3)* 20.);
+        title.rotation.x += .0059 //* Math.sin((i +3)* 20.);
+        title.rotation.z += .0063 //* Math.sin((i +3)* 20.);
+
+        for( var i = 0; i < meshes.length; i++ ){
+          meshes[i].update();
+        }
+
+        title.update();
+
+        requestAnimationFrame( animate );
+        
+        
+        if( VR == true ){
+          effect.render( scene, camera );
+        }else{
+          renderer.render( scene , camera );
+        }
+
+
+      }
+
+
+
+      // Resets the renderer to be the proper size
+      function onWindowResize(){
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+       
+        var dpr = devicePixelRatio || 1;
+
+        //camUniforms.SS.value.x = window.innerWidth * dpr;
+        //camUniforms.SS.value.y = window.innerHeight * dpr;
+
+
+      }
+
+
+  
+  window.addEventListener("keydown", onKeyDown, true);
+	window.addEventListener('dblclick', onDoubleClick , false );
+
+
+
+    </script>
+
+  </body>
+</html>

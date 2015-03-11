@@ -48,7 +48,7 @@
 
       
       var VR = true;
-      var AUDIO = false;
+      var AUDIO = true; 
 
       var tv1 = new THREE.Vector3();
       var tv2 = new THREE.Vector3();
@@ -69,6 +69,7 @@
         fogColor:{ type:"v3" , value: new THREE.Vector3() },
         t_audio:{type:"t",value:null},
         fingers:{ type:"v3", value:[] }
+        //fingers:{ type:"v3", value:[] }
 
       }
 
@@ -94,6 +95,26 @@
 
       var controller = new Leap.Controller();
 
+      var audioController = new AudioController();
+    
+     
+
+      var userAudio = new UserAudio( audioController );
+      userAudio.onStreamCreated = function(){
+
+        console.log('asds');
+        //onLoad();
+
+      }
+
+
+      //var audio = new UserAudio( audioController );
+
+
+      audioController.mute.gain.value = 0;
+      G.t_audio.value = audioController.texture;
+
+
       initThree();
       animate();
       
@@ -103,35 +124,14 @@
 
       var shaders = new ShaderLoader( 'shaders' , 'shaderChunks'   );
 
-      if( AUDIO == true ){
-
-        var audioController = new AudioController();
     
-        /* var audio = new PositionalAudio( audioController , 'audio/beyondLoop.wav' ,{
-          looping: true 
-        });*/
-
-        //var audio = new UserAudio( audioController );
-
-
-        //audioController.mute.gain.value = 0;
-        G.t_audio.value = audioController.texture;
-
-
-        var looper = new Looper( audioController , G.time , {
-
-          beatsPerMinute: 120,
-          beatsPerMeasure: 4,
-          measuresPerLoop: 4
-
-        });
-
-      }
-
-      shaders.shaderSetLoaded = function(){
+     
+       shaders.shaderSetLoaded = function(){
         onLoad();
       }
 
+
+ 
 
       shaders.load( 'ss-fire' , 'fire' , 'simulation' );
       
@@ -163,10 +163,7 @@
       });
 
 
-      if( AUDIO == true ){
-        var tones = initTones();
-      }
-
+     
       
 
 
@@ -241,11 +238,17 @@
         });
         for(var i = 0; i < 50; i++ ){
 
+          tv1.set( Math.random() , Math.random() , Math.random() );
+          tv1.sub( tv2.set( .5 , .5 , .5 ) );
+          tv1.normalize().multiplyScalar( .08 );
+          tv1.sub( tv2.set( 0. , 0. , .2));
+
           var mesh = new THREE.Mesh( g , m  );
-          mesh.target   = new THREE.Vector3();//toCart( 12 , t , p );
+          mesh.target   = new THREE.Vector3().copy( tv1 );
           mesh.velocity = new THREE.Vector3();
           mesh.power    = new THREE.Vector3( 1 , 1 , 1);
-          mesh.radius   = new THREE.Vector3( 1 , 1 , 1); 
+          mesh.radius   = new THREE.Vector3( 1 , 1 , 1);
+          
           REPELERS.push( mesh );
           G.fingers.value.push( mesh.position );
 
@@ -286,7 +289,7 @@
 
 
 
-        console.log( 'hello' );
+          console.log( 'hello' );
        }
 
 
@@ -379,7 +382,7 @@
           soul:{
 
             repulsionPower:     { type:"f" , value: -.0002 , constraints:[-300  , 0] },
-            repulsionRadius:     { type:"f" , value: .1 , constraints:[ 0  , 1000] },
+            repulsionRadius:     { type:"f" , value: 5. , constraints:[ 0  , 1000] },
           },
 
           body:{
@@ -400,20 +403,7 @@
 
         controller.connect();
 
-        if( AUDIO == true ){
-
-          looper.start();
-          
-          for( var i =0; i < tones.length; i++ ){
-
-            console.log( tones[i] );
-            tones[i].play();
-
-            scene.add( tones[i].mesh );
-
-          } 
-
-        }
+       
 
 
         // Get the load cube out of here
@@ -436,6 +426,9 @@
           
           updateFingers( controller.frame() );
 
+          
+
+
           menu.update();
 
           if( allLoaded == true ){
@@ -447,8 +440,6 @@
 
             if( AUDIO == true ){
 
-              soundPos.copy( G.fingers.value[4] );
-              soundPos1.copy( G.fingers.value[29] );
               
               audioController.update();
 
@@ -511,6 +502,9 @@
        //console.
        for( var i = 0; i < 25; i++ ){
 
+        var rep = REPELERS[i+25];
+         rep.power.x = 1;
+         
           var r = G.fingers.value[i];
           var bI =  i % 5 ;                     // Bone index
           var fI = Math.floor( i / 5 );     // finger index
@@ -542,8 +536,18 @@
          //console.
        for( var i = 0; i < 25; i++ ){
 
-         var r = G.fingers.value[i+25];
-         r.x = 100000;
+         var r = REPELERS[i];
+
+         tv1.copy( r.position );
+         tv1.sub( r.target );
+         tv1.multiplyScalar( .03 );
+         r.position.sub( tv1 );
+
+    
+         var index = (i / 100 ) * audioController.analyzer.array.length;
+         index = Math.floor( index );
+         r.power.x = audioController.analyzer.array[ index ];
+         //console.log( r.power.x );
 
         }
 
@@ -558,6 +562,8 @@
         //console.
        for( var i = 0; i < 25; i++ ){
 
+         var rep = REPELERS[i+25];
+         rep.power.x = 1;
           var r = G.fingers.value[i+25];
           var bI =  i % 5 ;                     // Bone index
           var fI = Math.floor( i / 5 );     // finger index
@@ -585,14 +591,23 @@
          //console.
        for( var i = 0; i < 25; i++ ){
 
-         var r = G.fingers.value[i+25];
-         r.x = 100000;
+         var r = REPELERS[i+25];
 
-        }
+         tv1.copy( r.position );
+         tv1.sub( r.target );
+         tv1.multiplyScalar( .03 );
+         r.position.sub( tv1 );
+
+         var index = ((i+25) / 100 ) * audioController.analyzer.array.length;
+         index = Math.floor( index );
+         r.power.x = audioController.analyzer.array[ index ];
+
+
+       }
 
 
 
-      }
+    }
 
    
   }

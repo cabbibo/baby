@@ -16,7 +16,6 @@ function AudioController( listener ){
   this.analyzer.frequencyBinCount = 1024;
   this.analyzer.array = new Uint8Array( this.analyzer.frequencyBinCount );
 
-  this.freqByteData = new Uint8Array( this.analyzer.frequencyBinCount );
 
   this.audioTexture  = new AudioTexture( this );
   
@@ -36,7 +35,6 @@ function AudioController( listener ){
 AudioController.prototype.update = function(){
 
   this.analyzer.getByteFrequencyData( this.analyzer.array );
-  this.analyzer.getByteFrequencyData( this.freqByteData );
 
   this.audioTexture.update();
 

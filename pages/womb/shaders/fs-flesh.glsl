@@ -61,6 +61,6 @@ void main(){
   //gl_FragColor = vec4( normalize(vMNorm.xyz) * normalize(vMNorm.xyz) + vec3( .5) , 1. );
  
   vec4 sem = texture2D( t_sem , vSEM );
-  gl_FragColor = sem; //vec4( 1. , .3 , .3 , 1.) *  sem; //vec4( vSEM.x , 0. , vSEM.y , 1. );
-
+  gl_FragColor = sem;//vec4( aC.xyz + a ,1. ); 
+  gl_FragColor = vec4( (aC.xyz + a) * sem.xyz ,1. ); 
 }
