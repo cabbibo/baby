@@ -1,5 +1,4 @@
 const int size  = @SIZE;
-const float iSize = 1./float(size);
 
 
 uniform vec2 resolution;
@@ -20,41 +19,6 @@ uniform float dampening;
 
 varying vec2 vUv;
 
-$springForce
-
-vec3 getSurrounding( vec2 uv ){
-
-
-  float amount = 0.;
-  vec3 others = vec3( 0. );
-
-  if( uv.x > iSize ){
-    others += texture2D( t_pos , uv - vec2( iSize , 0. ) ).xyz;
-    amount += 1.;
-  }
-   
-  if( uv.x < 1.- iSize ){
-    others += texture2D( t_pos , uv + vec2( iSize , 0. ) ).xyz;
-    amount += 1.;
-  }
-
-  if( uv.y > iSize ){
-    others += texture2D( t_pos , uv - vec2( 0. , iSize ) ).xyz;
-    amount += 1.;
-  }
-
-
-  if( uv.y < 1. - iSize ){
-    others += texture2D( t_pos , uv + vec2( 0. , iSize ) ).xyz;
-    amount += 1.;
-  }
-
-  others /= amount;
-
-  return others;
-
-
-}
 
 void main(){
 
@@ -102,10 +66,6 @@ void main(){
   vel *= dampening;
   p += vel * 1.;//speed;*/
 
-  vec3 others = getSurrounding( uv );
-  vec3 dOthers = others - p;
-
-  p += dOthers * .2; 
 
 
   //gl_FragColor = vec4( og.xyz + sin( timer ) * 1.* vec3( vUv.x , vUv.y , 0. ), 1.  );

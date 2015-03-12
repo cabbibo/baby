@@ -28,26 +28,67 @@ varying vec3 vMNorm;
 varying vec2 vSEM;
 varying float vFR;
 
+varying vec3 vReflection;
+
+const float size  = @SIZE;
+const float iSize = 1. / size;
+
 $simplex
 
-varying vec3 vReflection;
+
+vec3 getNormal( vec3 p , vec2 uv ){
+
+  vec3 upX  = p;
+  vec3 doX  = p;
+  vec3 upY  = p;
+  vec3 doY  = p;
+
+  if( uv.x > iSize ){
+    doX = texture2D( t_pos , uv - vec2( iSize , 0. ) ).xyz;
+  }
+   
+  if( uv.x < 1.- iSize ){
+    upX = texture2D( t_pos , uv + vec2( iSize , 0. ) ).xyz;
+  }
+
+  if( uv.y > iSize ){
+    doY = texture2D( t_pos , uv - vec2( 0. , iSize ) ).xyz;
+  }
+
+
+  if( uv.y < 1. - iSize ){
+    upY = texture2D( t_pos , uv + vec2( 0. , iSize ) ).xyz;
+  }
+
+
+  vec3 dX = upX - doX;
+  vec3 dY = upY - doY;
+
+  return normalize( cross( dX , dY ) );
+
+
+}
 
 void main(){
 
   vUv = position.xy;
   //vec4 pos = texture2D( t_pos , vec2( vUv.x , (1. - (vUv.y + .125)) ) );
   vec4 pos = texture2D( t_pos , vUv );
-  vec4 v1 = texture2D( t_pos , tri1.xy );
-  vec4 v2 = texture2D( t_pos , tri2.xy );
+
+  /*vec4 v1 = texture2D( t_pos , tri1.xy );
+  vec4 v2 = texture2D( t_pos , tri2.xy );*/
   vec4 oPos = texture2D( t_oPos , vUv );
   vec4 ogPos = texture2D( t_og , vUv );
 
+  vec3 norm = getNormal( pos.xyz , vUv );
+  vNorm = norm;
+  
   vVel = pos.xyz - oPos.xyz;
 
-  vec3 a1 = pos.xyz - v1.xyz;
+  /*vec3 a1 = pos.xyz - v1.xyz;
   vec3 a2 = pos.xyz - v2.xyz;
 
-  vNorm = normalize( cross( a1 , a2 ) );
+  vNorm = normalize( cross( a1 , a2 ) );*/
 
   vec3 dif =  pos.xyz - ogPos.xyz;
   float displace = length( dif );

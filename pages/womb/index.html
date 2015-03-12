@@ -133,7 +133,7 @@
 
  
 
-      shaders.load( 'ss-fire' , 'fire' , 'simulation' );
+      shaders.load( 'ss-cloth' , 'fire' , 'simulation' );
       
       shaders.load( 'vs-sem'  , 'sem' , 'vertex' );
       shaders.load( 'fs-sem' , 'sem' , 'fragment' );
@@ -302,32 +302,48 @@
 
       */
 
+      var cubes =  [];
+
       function init(){
         
 
-        t = new THREE.Mesh( new THREE.BoxGeometry( .15 , .15 , .15 , 80 , 80 , 80 ) );
+        var size = .35;
+        var segments = 128;
+        var vs = shaders.setValue( shaders.vertexShaders.flesh , 'SIZE' , segments + "." );
+
+        var geo = new THREE.PlaneGeometry( size , size , segments , segments )
 
 
-        t.position.z = -.2;
-        t.rotation.x = 2;
-        t.rotation.y = 2;
-        t.rotation.z = 2;
+
+
+        t = new THREE.Mesh( geo );
+
+        t.position.z = -.1;
+       // t.rotation.x = 2;
+       // t.rotation.y = 2;
+       // t.rotation.z = 2;
 
 
         t.updateMatrix();
+       
 
         //var g = new THREE.Mesh( new THREE.IcosahedronGeometry( 3 , 4 ) );
         gem = new RepelerMesh( 'Parameters' , t, REPELERS , {
           
-          vs: shaders.vertexShaders.flesh,
+          vs: vs,
           fs: shaders.fragmentShaders.flesh,
 
       
           soul:{
 
             repulsionPower:     { type:"f" , value: -.0002 , constraints:[-300  , 0] },
-            repulsionRadius:     { type:"f" , value: .1 , constraints:[ 0  , 1000] },
-            //dampening:     { type:"f" , value: .8 , constraints:[ 0  , 1000] },
+            
+
+            springLength:     { type:"f" , value: size / segments },
+            springMultiplier:     { type:"f" , value: 1000 },
+            repulsionRadius:     { type:"f" , value: .005 , constraints:[ 0  , 1000] },
+            dampening:     { type:"f" , value: .999 , constraints:[ .8  , 1 ] },
+
 
           },
 
@@ -502,8 +518,8 @@
        //console.
        for( var i = 0; i < 25; i++ ){
 
-        var rep = REPELERS[i+25];
-         rep.power.x = 1;
+          var rep = REPELERS[i];
+          rep.power.x = 256;
          
           var r = G.fingers.value[i];
           var bI =  i % 5 ;                     // Bone index
@@ -562,8 +578,9 @@
         //console.
        for( var i = 0; i < 25; i++ ){
 
-         var rep = REPELERS[i+25];
-         rep.power.x = 1;
+          var rep = REPELERS[i+25];
+          rep.power.x = 256;
+
           var r = G.fingers.value[i+25];
           var bI =  i % 5 ;                     // Bone index
           var fI = Math.floor( i / 5 );     // finger index
