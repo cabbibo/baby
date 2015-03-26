@@ -67,7 +67,7 @@ function Menu( links , touchables , title , params ){
   for( var i = 0; i < links.length; i++ ){
 
     var theta = (.4 - ( i / links.length )) * Math.PI;
-    var l = new Link( this.tmpTouch, links[i][0] , links[i][1] );
+    var l = new Link( this.touchables , links[i][0] , links[i][1] );
     this.links.push( l );
 
     var t = this.labelMaker.createMesh( links[i][1] );

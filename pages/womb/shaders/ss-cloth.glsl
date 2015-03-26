@@ -192,18 +192,27 @@ void main(){
 
   }
   
+
   vel += f*min( .1 , dT);
   vel *= dampening;
+
+  if( length( vel ) > .01 ){
+
+    vel = normalize( vel ) * .01;
+
+  }
   p += vel * 1.;//speed;*/
 
   vec3 o = getSurrounding( uv );
   vec3 oDif = o - p;
   p += oDif * .3;
 
+  
 
-  if( vUv.y < iSize || vUv.y > 1. - iSize || vUv.x < iSize || vUv.x > 1. - iSize  ){
+
+ /* if( vUv.y < iSize || vUv.y > 1. - iSize || vUv.x < iSize || vUv.x > 1. - iSize  ){
     p = pos.xyz;
-  }
+  }*/
 
   //gl_FragColor = vec4( og.xyz + sin( timer ) * 1.* vec3( vUv.x , vUv.y , 0. ), 1.  );
   gl_FragColor = vec4( p , life );

@@ -238,10 +238,14 @@
         });
         for(var i = 0; i < 50; i++ ){
 
-          tv1.set( Math.random() , Math.random() , Math.random() );
-          tv1.sub( tv2.set( .5 , .5 , .5 ) );
+          var t  = ( i / 50 ) * 2 * Math.PI;
+
+          var x = Math.cos( t );
+          var y = Math.sin( t );
+
+          tv1.set( x , y , 0 );
           tv1.normalize().multiplyScalar( .08 );
-          tv1.sub( tv2.set( 0. , 0. , .2));
+          tv1.sub( tv2.set( 0. , 0. , .05));
 
           var mesh = new THREE.Mesh( g , m  );
           mesh.target   = new THREE.Vector3().copy( tv1 );
@@ -362,8 +366,10 @@
         gem.toggle();
 
         g2.scale.multiplyScalar( 50 );
-        g2.position.z = 50 * .2
+        g2.position.z = -50 * .2
         scene.add( g2 );
+
+        g2.material.uniforms.t_matcap.value = matcapTurq;
 
         gems.push( gem );
 

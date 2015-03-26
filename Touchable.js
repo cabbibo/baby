@@ -34,13 +34,21 @@ function Touchable( touchers , params ){
 
   // Util Vectors
   this.tv1 = new THREE.Vector3();
-  this.touchVec = new THREE.Vector3();
+ 
+  this.touchVec  = new THREE.Vector3();
+  this.oTouchVec = new THREE.Vector3();
+
+  this.touchVel  = new THREE.Vector3();
+
+  this.distVec   = new THREE.Vector3();
+
+  this.touchID  = 0;
+  this.oTouchID = 0;
 
   
   // STATE
   this.hovered = false;
   this.touched = false;
-  this.playing = false;
 
 
   //Distance from touchers to object
@@ -77,7 +85,14 @@ Touchable.prototype.update = function(){
 
 
   // Figure out what the closest toucher is
-  var l = 10000;
+  var l = Infinity;
+
+  // Setting out touchID , to make sure
+  // we aren't jumping from one toucher
+  // to another
+  this.oTouchID = this.touchID;
+  this.oTouchVec.copy( this.touchVec );
+
   for( var i = 0; i < this.touchers.length; i++ ){
 
     
@@ -87,55 +102,100 @@ Touchable.prototype.update = function(){
     var length = this.tv1.length();
     if( length < l ){
       l = length;
+      this.touchID = i;
       this.touchVec.copy( this.touchers[i] );
     }
 
   }
 
-  this.touchVec.sub( this.body.position );
+  //this.touchVec.sub( this.body.position );
+
+  this.distVec.copy( this.touchVec );
+  this.distVec.sub( this.body.position );
  
-  // Push along our distance
-  this.oDist = this.dist;
-  this.dist = this.touchVec.length();
+  // Only do things if we are touching with the same
+  // finger. This will help avoid cases where a new
+  // finger comes out of nowhere, or there is general
+  // janks. It also means that we can use the toucher
+  // velocity, to define directional interaction.
+  if( this.touchID == this.oTouchID ){
+
+    // Push along our distance
+    this.oDist = this.dist;
+    this.dist = this.distVec.length();
+
+    // Getting the velocity of the toucher that is closest
+    this.tv1.copy( this.touchVec );
+    this.tv1.sub( this.oTouchVec );
+
+    this.touchVel.copy( this.tv1 );
+    //this.touchVel.normalize();
+
+    this.tv1.set( 0 , 0 , -1 );
+    this.tv1.applyQuaternion( camera.quaternion );
+
+    this.touchVel.normalize();
+    //console.log( this.touchVel );
+
+    // sees if we are moving in the same direction 
+    // or opposite direction of camera to position vector
+    this.oDirMatch = this.dirMatch;
+    this.dirMatch  = this.tv1.dot( this.touchVel );
+
+    if( this.dirMatch > 0 ){
+     console.log( 'POS')
+    }else{
+     // console.log('____');
+    }
 
 
-  // State Calls
-  if( this.dist <=  this.outerRadius && this.oDist > this.outerRadius ){
-    this._hoverOver();
-  }
-
-  if( this.dist >=  this.outerRadius && this.oDist < this.outerRadius ){
-    this._hoverOut();
-  }
-
-  if( this.dist <=  this.innerRadius && this.oDist > this.innerRadius ){
-    this._touchDown();
-  }
-
-  if( this.dist >=  this.innerRadius && this.oDist < this.innerRadius ){
-    this._touchUp();
-  }
-
-  // HOVERING
-  if( this.hovered === true &&  this.touched === false ){
-
-    // 0 - not even hovering
-    // 1 - touching
-    var amount = ( this.dist - this.innerRadius) / ( this.outerRadius - this.innerRadius );
-    this._hovering( amount );
-
-  }
 
 
-  //TOUCHING
-  if( this.touched === true ){
-    this._touching();
-  }
+    // State Calls
+    if( this.dist <=  this.outerRadius && this.oDist > this.outerRadius ){
+      if( this.dirMatch >  0 ){ this._hoverOver(); }
+    }
+
+    if( this.dist >=  this.outerRadius && this.oDist < this.outerRadius ){
+      if( this.dirMatch <= 0 ){ this._hoverOut(); }
+    }
+
+    if( this.dist <=  this.innerRadius && this.oDist > this.innerRadius ){
+      if( this.dirMatch >  0 ){ this._touchDown(); }
+    }
+
+    if( this.dist >=  this.innerRadius && this.oDist < this.innerRadius ){
+      if( this.dirMatch <= 0 ){ this._touchUp(); }
+    }
 
 
-  //NOT DOING ANYTHING
-  if( this.hovered === false ){
-    this._idling();
+
+    // HOVERING
+    if( this.hovered === true &&  this.touched === false ){
+
+      // 0 - not even hovering
+      // 1 - touching
+      var amount = ( this.dist - this.innerRadius) / ( this.outerRadius - this.innerRadius );
+      this._hovering( amount );
+
+    }
+
+
+    //TOUCHING
+    if( this.touched === true ){
+      this._touching();
+    }
+
+
+    //NOT DOING ANYTHING
+    if( this.hovered === false ){
+      this._idling();
+    }
+
+  }else{
+
+    console.log('CHANGS')
+
   }
 
 
@@ -147,9 +207,9 @@ Touchable.prototype._hovering = function( amount ){
 
 
 
-  this.shell.scale.x = amount * this.ratio;
-  this.shell.scale.y = amount * this.ratio;
-  this.shell.scale.z = amount * this.ratio;
+  this.shell.scale.x = ( amount + ( 1/this.ratio) ) * this.ratio;
+  this.shell.scale.y = ( amount + ( 1/this.ratio) ) * this.ratio;
+  this.shell.scale.z = ( amount + ( 1/this.ratio) ) * this.ratio;
 
 
   this.shell.material.color.setHSL( 1  , 1 , .8 );

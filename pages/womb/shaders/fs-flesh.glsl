@@ -37,7 +37,7 @@ void main(){
    
   float l =  100. / vMPos.y;
 
-  vec4 aC1 = texture2D( t_audio , vec2( abs(dot(vNorm , vec3( 1. , 0. , 0. ))), 0. ) );
+  vec4 aC1 = texture2D( t_audio , vec2( abs(dot(normalize(vNorm) , vec3( 1. , 0. , 0. ))), 0. ) );
  // aC *= texture2D( t_audio , vec2( vUv.x , 0. ) );
  // aC *= texture2D( t_audio , vec2( vUv.y , 0. ) );
 
@@ -48,7 +48,7 @@ void main(){
   float fr = max( 0. , dot( vCamVec , vMNorm ));
   float iFR = 1. - fr;
 
-  vec3 a = texture2D( t_audio , vec2( abs(sin(dot( reflect( vLightDir , vMNorm  )  , vCamVec ))) , 0. ) ).xyz *iFR;
+  vec3 a = texture2D( t_audio , vec2( abs(sin(dot( reflect( vLightDir , normalize(vMNorm)  )  , vCamVec ))) , 0. ) ).xyz *iFR;
   vec4 aC = texture2D( t_audio , vec2( abs(sin(dot( -vLightDir , vMNorm ))) , 0. )  );
 
   vec3 rC = color2 * pow( refl , custom1 * 30. );
@@ -62,5 +62,5 @@ void main(){
  
   vec4 sem = texture2D( t_sem , vSEM );
   gl_FragColor = sem;//vec4( aC.xyz + a ,1. ); 
-  gl_FragColor = vec4( (aC.xyz + a) * sem.xyz ,1. ); 
+  gl_FragColor = vec4(  sem.xyz ,1. ); 
 }
